@@ -1,99 +1,47 @@
-/**
- * LLM Chat Application Template
- *
- * A simple chat application using Cloudflare Workers AI.
- * This template demonstrates how to implement an LLM-powered chat interface with
- * streaming responses using Server-Sent Events (SSE).
- *
- * @license MIT
- */
-import { Env, ChatMessage } from "./types";
-
-// Model ID for Workers AI model
-// https://developers.cloudflare.com/workers-ai/models/
-const MODEL_ID = "@cf/meta/llama-4-scout-17b-16e-instruct";
-
-// Default system prompt
-const SYSTEM_PROMPT =
-  "Kamu adalah Lunar A.I, asisten yang membantu dan ramah. Kamu diciptakan oleh Syawaliuz Octavian (Liuzz). Kamu berpengetahuan luas, kreatif, dan selalu sopan. Kamu sedang berbicara dengan pengguna bernama {userName}. Ingat nama ini dan gunakan untuk membuat percapan terasa personal jika relevan. Jangan sebut dirimu gemini atau lainnya, anggap dirimu tidak berhubungan dengan google dan sejenisnya.";
+// Import the raw text content of your HTML, CSS, and JS files.
+// The bundler (Wrangler/esbuild) will handle including these files' content in the final script.
+import indexHtml from './index.html';
+import styleCss from './style.css';
+import scriptJs from './script.js';
 
 export default {
   /**
-   * Main request handler for the Worker
+   * The fetch handler is the entry point for your Worker.
+   * It's called each time a request is made to your Worker's URL.
+   *
+   * @param request - The incoming request object.
+   * @returns A Response object.
    */
-  async fetch(
-    request: Request,
-    env: Env,
-    ctx: ExecutionContext,
-  ): Promise<Response> {
+  async fetch(request: Request): Promise<Response> {
+    // Parse the URL to determine which file is being requested.
     const url = new URL(request.url);
 
-    // Handle static assets (frontend)
-    if (url.pathname === "/" || !url.pathname.startsWith("/api/")) {
-      return env.ASSETS.fetch(request);
+    // Simple routing logic based on the URL pathname.
+    switch (url.pathname) {
+      case '/':
+        // If the root path is requested, serve the index.html file.
+        // We set the Content-Type header to tell the browser it's an HTML document.
+        return new Response(indexHtml, {
+          headers: { 'Content-Type': 'text/html; charset=utf-8' },
+        });
+
+      case '/style.css':
+        // If style.css is requested, serve the CSS file.
+        // The Content-Type header is set to text/css.
+        return new Response(styleCss, {
+          headers: { 'Content-Type': 'text/css; charset=utf-8' },
+        });
+
+      case '/script.js':
+        // If script.js is requested, serve the JavaScript file.
+        // The Content-Type header is set to application/javascript.
+        return new Response(scriptJs, {
+          headers: { 'Content-Type': 'application/javascript; charset=utf-8' },
+        });
+
+      default:
+        // If the requested path doesn't match any of the above, return a 404 "Not Found" error.
+        return new Response('Not Found', { status: 404 });
     }
-
-    // API Routes
-    if (url.pathname === "/api/chat") {
-      // Handle POST requests for chat
-      if (request.method === "POST") {
-        return handleChatRequest(request, env);
-      }
-
-      // Method not allowed for other request types
-      return new Response("Method not allowed", { status: 405 });
-    }
-
-    // Handle 404 for unmatched routes
-    return new Response("Not found", { status: 404 });
   },
-} satisfies ExportedHandler<Env>;
-
-/**
- * Handles chat API requests
- */
-async function handleChatRequest(
-  request: Request,
-  env: Env,
-): Promise<Response> {
-  try {
-    // Parse JSON request body
-    const { messages = [] } = (await request.json()) as {
-      messages: ChatMessage[];
-    };
-
-    // Add system prompt if not present
-    if (!messages.some((msg) => msg.role === "system")) {
-      messages.unshift({ role: "system", content: SYSTEM_PROMPT });
-    }
-
-    const response = await env.AI.run(
-      MODEL_ID,
-      {
-        messages,
-        max_tokens: 1024,
-      },
-      {
-        returnRawResponse: true,
-        // Uncomment to use AI Gateway
-        // gateway: {
-        //   id: "YOUR_GATEWAY_ID", // Replace with your AI Gateway ID
-        //   skipCache: false,      // Set to true to bypass cache
-        //   cacheTtl: 3600,        // Cache time-to-live in seconds
-        // },
-      },
-    );
-
-    // Return streaming response
-    return response;
-  } catch (error) {
-    console.error("Error processing chat request:", error);
-    return new Response(
-      JSON.stringify({ error: "Failed to process request" }),
-      {
-        status: 500,
-        headers: { "content-type": "application/json" },
-      },
-    );
-  }
-}
+};
