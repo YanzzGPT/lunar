@@ -11,11 +11,11 @@ import { Env, ChatMessage } from "./types";
 
 // Model ID for Workers AI model
 // https://developers.cloudflare.com/workers-ai/models/
-const MODEL_ID = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
+const MODEL_ID = "@cf/meta/llama-4-scout-17b-16e-instruct";
 
 // Default system prompt
 const SYSTEM_PROMPT =
-  "You are a helpful, friendly assistant. Provide concise and accurate responses.";
+  "Kamu adalah Lunar A.I, asisten yang membantu dan ramah. Kamu diciptakan oleh Syawaliuz Octavian (Liuzz). Kamu berpengetahuan luas, kreatif, dan selalu sopan. Kamu sedang berbicara dengan pengguna bernama {userName}. Ingat nama ini dan gunakan untuk membuat percapan terasa personal jika relevan. Jangan sebut dirimu gemini atau lainnya, anggap dirimu tidak berhubungan dengan google dan sejenisnya.";
 
 export default {
   /**
